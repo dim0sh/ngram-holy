@@ -1,4 +1,4 @@
-use std::{fs, collections::HashMap};
+use std::{fs, collections::HashMap, env::args};
 use rayon::prelude::*;
 struct Ngram {
     n: usize,
@@ -57,8 +57,8 @@ impl Ngram {
     }
 
     fn create_new_sequenze(&self, start_seq: &String, lenght: usize) -> String {
-        let mut start_seq = start_seq.clone();
-        start_seq.push_str(" ");
+        // let mut start_seq = start_seq.clone();
+        // start_seq.push_str(" ");
         let mut term = start_seq.clone();
         let mut out = start_seq.clone();
         for _ in 0..lenght {
@@ -90,12 +90,23 @@ impl Ngram {
 
 
 fn main() {
-    let mut ng = Ngram::new(3);
+    let args: Vec<String> = args().collect();
+    let mut arg = String::new();
+    for i in 1..args.len() {
+        arg.push_str(&args[i]);
+        arg.push_str(" ");
+    }
+
+    let start_seq = arg;
+    let n = Ngram::split_into_words(&start_seq).len()+1;
+
+
+    let mut ng = Ngram::new(n);
     let data = fs::read_to_string("./data/bible.txt").unwrap();
     let data = data.to_lowercase();
     ng.train(Ngram::split_into_words(&data));
     println!("train finished");
-    let out = ng.create_new_sequenze(&String::from("gott ist"), 1000);
+    let out = ng.create_new_sequenze(&String::from(start_seq), 1000);
     
     fs::write("./data/output.txt", out).unwrap();
     print!("done")
