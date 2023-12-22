@@ -28,45 +28,30 @@ impl Ngram {
                 None => {index_map.insert(prefix, vec![i]);},
             }
         }
-        // let prefix_vector: Vec<(String,Vec<usize>)> = index_map.into_iter().collect();
-        let thread_return:Vec<HashMap<String,String>> = (0..10).into_par_iter().map(|t| {
-            let start_index = data_len/10*t;
-            let mut thread_best_prob:HashMap<String,f32> = HashMap::new();
-            let mut thread_prefix:HashMap<String,String>  = HashMap::new();
-            for i in start_index..(data_len/10+start_index) {
-                let word = &data[i+self.n-1];
-                let prefix = Ngram::convert_list_to_string(&data[i..(i+self.n-1)]);
-                let full = Ngram::convert_list_to_string(&data[i..(i+self.n)]);
-                if let Some(index_vector) = index_map.get(&prefix) {
-                    let counter_pre = index_vector.len() as f32;
-                    let mut counter_full = 0.0;
-                    for j in index_vector {
-                        if full == Ngram::convert_list_to_string(&data[*j..(*j+self.n)]) {
-                            counter_full += 1.0;
-                        }
+        let prefix_vector: Vec<(String,Vec<usize>)> = index_map.into_iter().collect();
+        let thread_return:Vec<(String,&str)> = prefix_vector.into_par_iter().map(|(key,value)| {
+            let mut thread_best_prob = 0.0;
+            let mut word = "";
+            let counter_pre = value.len() as f32;
+            let mut counter_full:f32 = 0.0;
+            for e in value.iter() {
+                let full = Ngram::convert_list_to_string(&data[*e..(*e+self.n)]);
+                for d in value.iter() {
+                    if full == Ngram::convert_list_to_string(&data[*d..(*d+self.n)]) {
+                        counter_full += 1.0;
                     }
-                    let prob:f32 = counter_full / counter_pre;
-                    match thread_best_prob.get(&prefix) {
-                        Some(x) => {
-                            if x < &prob {
-                                thread_best_prob.insert(prefix.clone(), prob);
-                                thread_prefix.insert(prefix.clone(), String::from(*word));
-                            }
-                        }
-                        None => {
-                            thread_best_prob.insert(prefix.clone(), prob);
-                            thread_prefix.insert(prefix.clone(), String::from(*word));
-                        }
-                    }
-                    
                 }
-            }
-            thread_prefix
+                let prob = counter_full/counter_pre;
+                if thread_best_prob < prob {
+                    thread_best_prob = prob;
+                    word = data[e+self.n-1];
+                }
+
+            }    
+            (key,word)    
         }).collect();
-        for map in thread_return.iter() {
-            for (key,value) in map.iter() {
-                self.prefix.insert(key.clone(), value.clone());
-            }
+        for (key,val) in thread_return.iter() {
+            self.prefix.insert(key.clone(), String::from(*val));
         }
                 
     }
