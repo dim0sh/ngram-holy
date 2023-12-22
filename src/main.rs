@@ -57,8 +57,8 @@ impl Ngram {
     }
 
     fn create_new_sequenze(&self, start_seq: &String, lenght: usize) -> String {
-        // let mut start_seq = start_seq.clone();
-        // start_seq.push_str(" ");
+        let mut start_seq = start_seq.clone();
+        start_seq.push_str(" ");
         let mut term = start_seq.clone();
         let mut out = start_seq.clone();
         for _ in 0..lenght {
@@ -96,18 +96,29 @@ fn main() {
         arg.push_str(&args[i]);
         arg.push_str(" ");
     }
-
-    let start_seq = arg;
-    let n = Ngram::split_into_words(&start_seq).len()+1;
-
-
-    let mut ng = Ngram::new(n);
-    let data = fs::read_to_string("./data/bible.txt").unwrap();
-    let data = data.to_lowercase();
-    ng.train(Ngram::split_into_words(&data));
-    println!("train finished");
-    let out = ng.create_new_sequenze(&String::from(start_seq), 1000);
-    
-    fs::write("./data/output.txt", out).unwrap();
-    print!("done")
+    if let Some(x) = arg.strip_suffix(" ") {
+        let start_seq = String::from(x);
+        let n = Ngram::split_into_words(&start_seq).len()+1;
+        let mut ng = Ngram::new(n);
+        if let Ok(x) = fs::read_to_string("./data/bible.txt") {
+            let data = x.to_lowercase();
+            if data.contains(&start_seq) {
+                println!("start sequence found");
+                ng.train(Ngram::split_into_words(&data));
+                println!("train finished");
+                let out = ng.create_new_sequenze(&String::from(start_seq), 1000);
+                fs::write("./data/output.txt", out).expect("Unable to write file");
+                print!("done")
+            } else {
+                println!("start sequence not found");
+                return;
+            }
+        } else {
+            println!("Error: file not found");
+            return;
+        }
+    } else {
+        println!("Error: no input");
+        return;
+    }
 }
