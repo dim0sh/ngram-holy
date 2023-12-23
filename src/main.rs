@@ -46,14 +46,12 @@ impl Ngram {
                     thread_best_prob = prob;
                     word = data[e+self.n-1];
                 }
-
             }    
             (key,word)    
         }).collect();
         for (key,val) in thread_return.iter() {
             self.prefix.insert(key.clone(), String::from(*val));
         }
-                
     }
 
     fn create_new_sequenze(&self, start_seq: &String, lenght: usize) -> String {
@@ -75,12 +73,7 @@ impl Ngram {
     }
 
     fn convert_list_to_string(data: &[&str]) -> String {
-        let mut out:String = String::new(); 
-        for i in data.iter() {
-            out.push_str(i);
-            out.push(' ');
-        }
-        return out;
+        return data.join(" ");
     }
 
     fn split_into_words(data: &str) -> Vec<&str> {
@@ -105,7 +98,7 @@ fn main() {
             if data.contains(&start_seq) {
                 println!("start sequence found");
                 ng.train(Ngram::split_into_words(&data));
-                println!("train finished");
+                println!("training finished");
                 let out = ng.create_new_sequenze(&String::from(start_seq), 1000);
                 fs::write("./data/output.txt", out).expect("Unable to write file");
                 print!("done")
