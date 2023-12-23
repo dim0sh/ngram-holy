@@ -73,7 +73,12 @@ impl Ngram {
     }
 
     fn convert_list_to_string(data: &[&str]) -> String {
-        return data.join(" ");
+        let mut out:String = String::new(); 
+        for i in data.iter() {
+            out.push_str(i);
+            out.push(' ');
+        }
+        return out;
     }
 
     fn split_into_words(data: &str) -> Vec<&str> {
